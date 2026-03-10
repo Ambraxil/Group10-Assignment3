@@ -28,8 +28,8 @@ const SignInForm: React.FC = () => {
   });
 
   const onSubmit = async (data: SignInData) => {
-    console.log('Sign In Data:', data);
-    return new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    router.replace('/employeeinfo');
   };
 
   return (

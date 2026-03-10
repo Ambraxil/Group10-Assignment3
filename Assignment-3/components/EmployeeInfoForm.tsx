@@ -11,34 +11,52 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SignUpData, signUpSchema } from './authSchemas';
+import { z } from 'zod';
 
-const SignUpForm: React.FC = () => {
+const employeeSchema = z.object({
+  fullName:   z.string().min(1, 'Full name is required'),
+  employeeId: z.string().min(1, 'Employee ID is required').regex(/^[A-Za-z0-9]{4,10}$/, 'Must be 4-10 alphanumeric characters'),
+  email:      z.string().min(1, 'Email is required').email('Invalid email format'),
+  phone:      z.string().min(1, 'Phone is required').regex(/^\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}$/, 'Use format (555) 123-4567'),
+  jobTitle:   z.string().min(1, 'Job title is required'),
+  postalCode: z.string().min(1, 'Postal / ZIP code is required').regex(
+    /^([A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d|\d{5}(-\d{4})?)$/i,
+    'Use A1A 1A1 or 12345 format'
+  ),
+  password:   z.string().min(1, 'Password is required').min(8, 'Must be at least 8 characters'),
+});
+
+type EmployeeData = z.infer<typeof employeeSchema>;
+
+const EmployeeInfoForm: React.FC = () => {
   const {
     control,
     handleSubmit,
     formState: { errors, isValid, isSubmitting },
-  } = useForm<SignUpData>({
-    resolver: zodResolver(signUpSchema),
+  } = useForm<EmployeeData>({
+    resolver: zodResolver(employeeSchema),
     mode: 'onChange',
     defaultValues: {
       fullName: '',
+      employeeId: '',
       email: '',
+      phone: '',
+      jobTitle: '',
+      postalCode: '',
       password: '',
-      confirmPassword: '',
     },
   });
 
-  const onSubmit = async (data: SignUpData) => {
+  const onSubmit = async (data: EmployeeData) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    router.replace('/employeeinfo');
+    console.log('Employee Data:', data);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
       <View style={styles.container}>
-        <Text style={styles.title}>Sign Up</Text>
-        <Text style={styles.subtitle}>Create your account.</Text>
+        <Text style={styles.title}>Employee Information</Text>
+        <Text style={styles.subtitle}>Fill in the details to register a new employee.</Text>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name</Text>
@@ -56,9 +74,27 @@ const SignUpForm: React.FC = () => {
               />
             )}
           />
-          {errors.fullName && (
-            <Text style={styles.errorText}>{errors.fullName.message}</Text>
-          )}
+          {errors.fullName && <Text style={styles.errorText}>{errors.fullName.message}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Employee ID</Text>
+          <Controller
+            control={control}
+            name="employeeId"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[styles.input, errors.employeeId && styles.inputError]}
+                placeholder="EMP001"
+                placeholderTextColor="#94a3b8"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                autoCapitalize="none"
+              />
+            )}
+          />
+          {errors.employeeId && <Text style={styles.errorText}>{errors.employeeId.message}</Text>}
         </View>
 
         <View style={styles.inputContainer}>
@@ -69,7 +105,7 @@ const SignUpForm: React.FC = () => {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={[styles.input, errors.email && styles.inputError]}
-                placeholder="email@example.com"
+                placeholder="john@company.com"
                 placeholderTextColor="#94a3b8"
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -80,6 +116,65 @@ const SignUpForm: React.FC = () => {
             )}
           />
           {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Phone Number</Text>
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[styles.input, errors.phone && styles.inputError]}
+                placeholder="(555) 123-4567"
+                placeholderTextColor="#94a3b8"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                keyboardType="phone-pad"
+              />
+            )}
+          />
+          {errors.phone && <Text style={styles.errorText}>{errors.phone.message}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Job Title</Text>
+          <Controller
+            control={control}
+            name="jobTitle"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[styles.input, errors.jobTitle && styles.inputError]}
+                placeholder="Software Engineer"
+                placeholderTextColor="#94a3b8"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          {errors.jobTitle && <Text style={styles.errorText}>{errors.jobTitle.message}</Text>}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Postal / ZIP Code</Text>
+          <Controller
+            control={control}
+            name="postalCode"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[styles.input, errors.postalCode && styles.inputError]}
+                placeholder="A1A 1A1 or 12345"
+                placeholderTextColor="#94a3b8"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                autoCapitalize="none"
+              />
+            )}
+          />
+          {errors.postalCode && <Text style={styles.errorText}>{errors.postalCode.message}</Text>}
         </View>
 
         <View style={styles.inputContainer}>
@@ -99,31 +194,7 @@ const SignUpForm: React.FC = () => {
               />
             )}
           />
-          {errors.password && (
-            <Text style={styles.errorText}>{errors.password.message}</Text>
-          )}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={[styles.input, errors.confirmPassword && styles.inputError]}
-                placeholder="Confirm your password"
-                placeholderTextColor="#94a3b8"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                secureTextEntry
-              />
-            )}
-          />
-          {errors.confirmPassword && (
-            <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
-          )}
+          {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
         </View>
 
         <TouchableOpacity
@@ -134,14 +205,14 @@ const SignUpForm: React.FC = () => {
           {isSubmitting ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.buttonText}>Sign up</Text>
+            <Text style={styles.buttonText}>Submit</Text>
           )}
         </TouchableOpacity>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
+          <Text style={styles.footerText}>Back to </Text>
           <TouchableOpacity onPress={() => router.push('/signin')}>
-            <Text style={styles.linkText}>Log in</Text>
+            <Text style={styles.linkText}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -235,4 +306,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUpForm;
+export default EmployeeInfoForm;
